@@ -8,7 +8,7 @@ if __name__ == "__main__":
     # 实例化glm
     llm = GLM()
     # 调用方法，传入问题，生成回复
-    resource = llm.generate_response("你在干嘛?")
+    resource = llm.generate_response("你知道塞罗奥特曼吗")
 
     # 实例化tts
     tts = Edge_TTS()
