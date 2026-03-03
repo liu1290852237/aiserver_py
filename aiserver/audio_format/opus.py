@@ -87,7 +87,7 @@ class Opus_Encode:
     # 传入opus编码帧列表，返回wav文件路径
     def opus_to_wav_file(self, opus_data : List[bytes]) -> str:
         # 创建一个输出文件
-        output_file = "test.wav"
+        output_file = "../asr/funasr/test.wav"
 
         # 创建一个解码器
         decoder = opuslib_next.Decoder(self.opus_sample_rate, self.opus_channel)
