@@ -10,6 +10,12 @@ from pydub import AudioSegment
 # 该类用于对音频进行opus编码
 # 初始化了音频提取参数与opus编码参数
 class Opus_Encode:
+    _instance = None
+    # 单例模式
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
     def __init__(self):
         self.sample_rate = 16000
         self.channel = 1
@@ -23,7 +29,7 @@ class Opus_Encode:
         # 计算opus每帧占用字节
         self.opus_frame_bytes_size = self.opus_frame_size * self.opus_channel * self.opus_sample_width
 
-    # _________________________________传入mp3或wav音频文件__返回Opus编码和时长__________________________________
+    # _________________________________________wav/mp3 -> opus  encode_________________________________________
     def audio_to_opus(self, audio_file_path):
         # ##########################获取音频参数####################
         # os.path.splitext方法获取音频格式
@@ -38,7 +44,6 @@ class Opus_Encode:
         duration = len(audio)
         # 计算音频大小
         raw_datas = audio.raw_data
-        print(f"音频PCM数据大小：{len(raw_datas)}字节")
 
         # ####################opus编码器设置####################
         encoder = opuslib_next.Encoder(self.opus_sample_rate, self.opus_channel, opuslib_next.APPLICATION_AUDIO)
@@ -70,9 +75,9 @@ class Opus_Encode:
             opus_datas.append(opus_data)
 
     # 最终返回完整的opus编码和时长
-        return opus_datas, duration
+        return opus_datas
 
-    # ___________________________________________保存和读取Opus_dates________________________________________________
+    # ___________________________________________ Opus_dates <-->.opus ________________________________________________
     # 该方法将opus编码帧列表保存为二进制文件（利用pickle.dump方法）
     def save_opus_raw(self, opus_select, output_path):
         with open(output_path, "wb") as f:
@@ -83,11 +88,9 @@ class Opus_Encode:
             opus_datas = pickle.load(f)
         return opus_datas
 
-    # ___________________________________________Opus->pcm____________________________________________
+    # ________________________________________ Opus->wav ____________________________________________
     # 传入opus编码帧列表，返回wav文件路径
-    def opus_to_wav_file(self, opus_data : List[bytes]) -> str:
-        # 创建一个输出文件
-        output_file = "../asr/funasr/test.wav"
+    def opus_to_wav_file(self, output_file, opus_data : List[bytes]) -> str:
 
         # 创建一个解码器
         decoder = opuslib_next.Decoder(self.opus_sample_rate, self.opus_channel)
@@ -113,16 +116,15 @@ class Opus_Encode:
             wav_file.setframerate(self.opus_sample_rate)
             # 将PCM数据帧写入WAV文件
             wav_file.writeframes(b''.join(pcm_data))
-            print(f"PCM数据：{pcm_data}")
-            print(b''.join(pcm_data))
+
+        return output_file
 
 
 if __name__ == "__main__":
     # test.mp3编码测试
     opus = Opus_Encode()
-    opus_output, duration = opus.audio_to_opus("../../test.mp3")
+    opus_output = opus.audio_to_opus("../../test.mp3")
 
-    print(f"音频总时长：{duration}毫秒")
     print(f"Opus数据帧数：{len(opus_output)}")
     print(f"二进制编码：")
     print(opus_output)
@@ -136,4 +138,4 @@ if __name__ == "__main__":
 
     # load解码测试
     # 将返回的opus帧列表保存为.wav文件
-    opus.opus_to_wav_file(load)
+    opus.opus_to_wav_file("test.wav", load)
